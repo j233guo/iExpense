@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject var expenses = Expenses()
+    @State private var showingAddExpense = false
     
     func removeItem(at offsets: IndexSet) {
         expenses.items.remove(atOffsets: offsets)
@@ -16,21 +17,29 @@ struct ContentView: View {
     
     var body: some View {
         NavigationView {
-            List {
-                ForEach(expenses.items) { item in
-                    Text(item.name)
+            ZStack {
+                List {
+                    ForEach(expenses.items) { item in
+                        Text(item.name)
+                    }
+                    .onDelete(perform: removeItem)
                 }
-                .onDelete(perform: removeItem)
+                if expenses.items.count == 0 {
+                    Text("Nothing to show here..")
+                        .foregroundColor(.secondary)
+                }
             }
             .navigationTitle("iExpense")
             .toolbar {
                 Button(action: {
-                    let expense = ExpenseItem(name: "Test", type: "Personal", amount: 5)
-                    expenses.items.append(expense)
+                    showingAddExpense = true
                 }, label: {
                     Image(systemName: "plus")
                 })
             }
+            .sheet(isPresented: $showingAddExpense, content: {
+                AddView(expenses: expenses)
+            })
         }
     }
 }
