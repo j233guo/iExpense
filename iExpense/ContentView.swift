@@ -9,28 +9,53 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject var expenses = Expenses()
-    
-    func removeItem(at offsets: IndexSet) {
-        expenses.items.remove(atOffsets: offsets)
-    }
+    @State private var showingAddExpense = false
     
     var body: some View {
         NavigationView {
-            List {
-                ForEach(expenses.items) { item in
-                    Text(item.name)
+            ZStack {
+                List {
+                    ForEach(expenses.items) { item in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(item.name)
+                                    .font(.headline)
+                                Text(item.type)
+                            }
+                            Spacer()
+                            if item.amount <= 10.0 {
+                                Text(item.amount, format: .currency(code: Locale.current.currencyCode ?? "USD"))
+                                    .foregroundColor(.green)
+                            } else if item.amount <= 500.0 {
+                                Text(item.amount, format: .currency(code: Locale.current.currencyCode ?? "USD"))
+                                    .foregroundColor(.primary)
+                            } else {
+                                Text(item.amount, format: .currency(code: Locale.current.currencyCode ?? "USD"))
+                                    .foregroundColor(.red)
+                            }
+                            
+                        }
+                    }
+                    .onDelete(perform: {offset in
+                        expenses.remove(at: offset)
+                    })
                 }
-                .onDelete(perform: removeItem)
+                if expenses.items.count == 0 {
+                    Text("Nothing to show here..")
+                        .foregroundColor(.secondary)
+                }
             }
             .navigationTitle("iExpense")
             .toolbar {
                 Button(action: {
-                    let expense = ExpenseItem(name: "Test", type: "Personal", amount: 5)
-                    expenses.items.append(expense)
+                    showingAddExpense = true
                 }, label: {
                     Image(systemName: "plus")
                 })
             }
+            .sheet(isPresented: $showingAddExpense, content: {
+                AddView(expenses: expenses)
+            })
         }
     }
 }
